@@ -6,14 +6,15 @@ import json
 from email import utils
 import datetime
 import socket
+import hashlib
+import gzip
+import logging
+
 from lxml import etree
 from eventlet.green import urllib2
 from eventlet.timeout import Timeout
 from eventlet.green import httplib
 import simplejson
-import subprocess
-import hashlib
-import gzip
 
 import bitcoinaverage as ba
 from bitcoinaverage.config import API_CALL_TIMEOUT_THRESHOLD, API_REQUEST_HEADERS, API_FILES
@@ -58,7 +59,7 @@ def write_js_config():
         config_file.write(config_string)
 
 
-def write_fiat_rates_config():
+def write_fiat_rates_config(redis_connection=None):
     global ba
     js_config_template = "var fiatCurrencies = $FIAT_CURRENCIES_DATA$;"
 
@@ -98,6 +99,9 @@ def write_fiat_rates_config():
 
     with open(os.path.join(ba.server.API_DOCUMENT_ROOT, 'fiat_data'), 'w') as fiat_exchange_api_file:
         fiat_exchange_api_file.write(json.dumps(currency_data_list))
+
+    if redis_connection:
+        redis_connection.set("ba:fiat_data", json.dumps(currency_data_list))
 
 
 def write_html_currency_pages():

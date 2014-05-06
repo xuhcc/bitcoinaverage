@@ -14,17 +14,17 @@ from bitcoinaverage.config import API_WRITE_FREQUENCY, FIAT_RATES_QUERY_FREQUENC
 import bitcoinaverage.helpers as helpers
 from bitcoinaverage.api_calculations import calculateTotalVolumes, calculateRelativeVolumes, calculateAverageRates, formatDataForAPI, writeAPIFiles, calculateAllGlobalAverages
 
+red = redis.StrictRedis(host="localhost", port=6379, db=0)
+
 helpers.write_log('script started', 'LOG')
 helpers.write_js_config()
-helpers.write_fiat_rates_config()
+helpers.write_fiat_rates_config(redis_connection=red)
 last_fiat_exchange_rate_update = time.time()
 helpers.write_api_index_files()
 
-red = redis.StrictRedis(host="localhost", port=6379, db=0)
-
 while True:
     if last_fiat_exchange_rate_update < int(time.time())-FIAT_RATES_QUERY_FREQUENCY:
-        helpers.write_fiat_rates_config()
+        helpers.write_fiat_rates_config(redis_connection=red)
 
     start_time = int(time.time())
 

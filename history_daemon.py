@@ -1,19 +1,21 @@
 #!/usr/bin/python2.7
 import os
 import sys
-
 import time
-import requests
-import simplejson
 import json
 import datetime
 import email
+
+import requests
+import simplejson
+import redis
 
 import bitcoinaverage as ba
 from bitcoinaverage.config import HISTORY_QUERY_FREQUENCY, CURRENCY_LIST
 from bitcoinaverage.helpers import write_log
 from bitcoinaverage import history_writers
 
+red = redis.StrictRedis(host="localhost", port=6379, db=0)
 
 write_log('script started', 'LOG')
 
@@ -40,13 +42,31 @@ while True:
 
     for currency_code in CURRENCY_LIST:
         try:
-            history_writers.write_24h_csv(currency_code, current_data_all[currency_code]['averages'], current_data_timestamp)
-            history_writers.write_1mon_csv(currency_code, current_data_timestamp)
-            history_writers.write_forever_csv(currency_code, current_data_all[currency_code]['averages']['total_vol'], current_data_timestamp)
-            history_writers.write_volumes_csv(currency_code, current_data_all[currency_code], current_data_timestamp)
-
-            history_writers.write_24h_global_average_csv(fiat_data_all, current_data_all,  currency_code, current_data_timestamp)
-            history_writers.write_24h_global_average_short_csv(current_data_all,  currency_code, current_data_timestamp)
+            history_writers.write_24h_csv(
+                currency_code,
+                current_data_all[currency_code]['averages'],
+                current_data_timestamp)
+            history_writers.write_1mon_csv(
+                currency_code,
+                current_data_timestamp)
+            history_writers.write_forever_csv(
+                currency_code,
+                current_data_all[currency_code]['averages']['total_vol'],
+                current_data_timestamp)
+            history_writers.write_volumes_csv(
+                currency_code,
+                current_data_all[currency_code],
+                current_data_timestamp)
+            history_writers.write_24h_global_average_csv(
+                fiat_data_all,
+                current_data_all,
+                currency_code,
+                current_data_timestamp,
+                redis_connection=red)
+            history_writers.write_24h_global_average_short_csv(
+                current_data_all,
+                currency_code,
+                current_data_timestamp)
         except KeyError:
             pass
 

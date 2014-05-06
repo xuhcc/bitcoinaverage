@@ -49,7 +49,7 @@ def write_24h_csv(currency_code, current_data, current_timestamp):
             csvwriter.writerow(row)
 
 
-def write_24h_global_average_csv(fiat_data_all , currency_data_all, currency_code,  current_timestamp):
+def write_24h_global_average_csv(fiat_data_all , currency_data_all, currency_code,  current_timestamp, redis_connection=None):
     current_24h_sliding_file_path = os.path.join(ba.server.HISTORY_DOCUMENT_ROOT, currency_code, 'per_minute_24h_global_average_sliding_window.csv')
     current_24h_sliding_data = []
 
@@ -106,6 +106,9 @@ def write_24h_global_average_csv(fiat_data_all , currency_data_all, currency_cod
         csvwriter.writeheader()
         for row in current_24h_sliding_data:
             csvwriter.writerow(row)
+
+    if redis_connection:
+        redis_connection.set("ba:24h_global_avg", json.dumps(current_24h_sliding_data))
 
 
 def write_24h_global_average_short_csv(currency_data_all, currency_code,  current_timestamp):
